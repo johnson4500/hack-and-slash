@@ -25,9 +25,9 @@ void SpriteManager::removeEnemies() {
     }
 }
 
-void SpriteManager::updateEnemies(sf::Sprite &player, float dt, bool isAttacking, sf::Texture *enemyT, sf::Texture *deathT, sf::Texture *hitT, int playerDirection, int comboNumber) {
+void SpriteManager::updateEnemies(sf::Sprite &player, float dt, bool isAttacking, sf::Texture *enemyT, sf::Texture *deathT, sf::Texture *hitT, sf::Texture *attackT, int playerDirection, int comboNumber) {
     if (enemies.size() < 2) {
-            Enemy *enemy = new Enemy(enemyT, deathT, hitT);
+            Enemy *enemy = new Enemy(enemyT, deathT, hitT, attackT);
             addEnemy(enemy);
     }
 

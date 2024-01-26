@@ -17,10 +17,18 @@ struct Enemy {
     sf::Time elapsed2;
     sf::Clock c3;
     sf::Time elapsed3;
+    sf::Clock c4;
+    sf::Time elapsed4;
+
     sf::Texture *enemyTexture;
     sf::IntRect sourceRect;
+
     sf::Texture *deathTexture;
     sf::IntRect deathSourceRect;
+
+    sf::Texture *attackTexture;
+    sf::IntRect attackSourceRect;
+
     sf::Texture *hitTexture;
     sf::IntRect helloo;
     sf::Sprite enemySprite;
@@ -33,12 +41,14 @@ struct Enemy {
     
     bool markedForRemoval;
 
-    Enemy(sf::Texture *texture1, sf::Texture *texture2, sf::Texture *texture3) {
+    Enemy(sf::Texture *texture1, sf::Texture *texture2, sf::Texture *texture3, sf::Texture *texture4) {
         this->enemyTexture = texture1;
         this->sourceRect = sf::IntRect(0, 0, 320, 320);
         this->deathTexture = texture2;
         this->hitTexture = texture3;
         this->deathSourceRect = sf::IntRect(0, 0, 320, 320);
+        this->attackTexture = texture4;
+        this->attackSourceRect = sf::IntRect(0, 0, 320, 320);
         this->helloo = sf::IntRect(0, 0, 320, 320);
         this->enemySprite = sf::Sprite(*enemyTexture, sourceRect);
         this->enemySprite.setOrigin(160, 160);
@@ -48,6 +58,7 @@ struct Enemy {
         this->elapsed = c1.getElapsedTime();
         this->elapsed2 = c2.getElapsedTime();
         this->elapsed3 = c3.getElapsedTime();
+        this->elapsed4 = c4.getElapsedTime();
         this->inRange = false;
         this->markedForRemoval = false;
         this-> health = 100;
@@ -116,6 +127,21 @@ struct Enemy {
         }
     }
 
+    void attack(sf::Time &elapsed, sf::Clock &clock, sf::Sprite &enemySprite, sf::IntRect &attackSourceRect) {
+        elapsed = clock.getElapsedTime();
+        if (elapsed.asSeconds() >= 0.03f) {
+            if (attackSourceRect.left >= 3520) {
+                attackSourceRect.left = 0;
+                enemySprite.setTexture(*enemyTexture);
+            } else {
+                enemySprite.setTextureRect(attackSourceRect);
+                attackSourceRect.left += 320;
+            }
+
+            clock.restart();
+        }
+    }
+
     void spriteIsDead() {
         std::cout << "sprite is dead";
     };
@@ -128,12 +154,14 @@ struct Enemy {
                 inRange = false;
                 enemySprite.setScale(1.0f, 1.0f);
                 enemySprite.move(direction * 200 * dt, 0);
+                enemySprite.setTexture(*enemyTexture);
                 movementAnimate(elapsed, c1, sourceRect, enemySprite, *enemyTexture);
             } else if (enemySprite.getPosition().x < player.getPosition().x - 150) {
                 direction = 1;
                 inRange = false;
                 enemySprite.setScale(-1.0f, 1.0f);
                 enemySprite.move(direction * 200 * dt, 0);
+                enemySprite.setTexture(*enemyTexture);
                 movementAnimate(elapsed, c1, sourceRect, enemySprite, *enemyTexture);
             } else if ((sourceRect.left / 320) % 4 != 3) {
                 inRange = true;
@@ -143,9 +171,13 @@ struct Enemy {
             if (enemySprite.getPosition().x < player.getPosition().x + 150 && enemySprite.getPosition().x >= player.getPosition().x) {
                 direction = 1;
                 inRange = true;
+                enemySprite.setTexture(*attackTexture);
+                attack(elapsed, c4, enemySprite, attackSourceRect);
             } else if (enemySprite.getPosition().x > player.getPosition().x - 150 && enemySprite.getPosition().x <= player.getPosition().x) {
                 direction = -1;
                 inRange = true;
+                enemySprite.setTexture(*attackTexture);
+                attack(elapsed, c4, enemySprite, attackSourceRect);
             }
         }
 

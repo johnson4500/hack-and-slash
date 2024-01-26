@@ -13,7 +13,7 @@ class SpriteManager {
     public:
         void addEnemy(Enemy *enemy);
         void removeEnemies();
-        void updateEnemies(sf::Sprite &player, float dt, bool isAttacking, sf::Texture *enemyT, sf::Texture *deathT, sf::Texture *hitT, int playerDirection, int comboNumber);
+        void updateEnemies(sf::Sprite &player, float dt, bool isAttacking, sf::Texture *enemyT, sf::Texture *deathT, sf::Texture *hitT, sf::Texture *attackT, int playerDirection, int comboNumber);
         void drawEnemies(sf::RenderWindow &window, sf::Sprite &player);
         bool isMarkedForRemoval(Enemy *enemy);
     private:

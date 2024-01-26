@@ -135,9 +135,10 @@ int main() {
     sf::Texture *hitTexture= TextureManager::loadTexture("enemy-hit", "C:/Users/johns/Downloads/hit.png");
     sf::Texture *enemyT = TextureManager::loadTexture("enemy", "C:/Users/johns/Downloads/playerpiskleft.png");
     sf::Texture *deathT = TextureManager::loadTexture("enemy-death", "C:/Users/johns/Downloads/deathpiskel.png");
+    sf::Texture *attackT = TextureManager::loadTexture("enemy-attack", "C:/Users/johns/Downloads/attackpiskel.png");
 
-    Enemy* enemy = new Enemy(enemyT, deathT, hitTexture);
-    Enemy* enemy2 = new Enemy(enemyT, deathT, hitTexture);
+    Enemy* enemy = new Enemy(enemyT, deathT, hitTexture, attackT);
+    Enemy* enemy2 = new Enemy(enemyT, deathT, hitTexture, attackT);
     enemy2->enemySprite.setPosition(800, 400);
 
     SpriteManager spriteManager;
@@ -248,7 +249,7 @@ int main() {
             velocity = 0;
         }
 
-        spriteManager.updateEnemies(player, dt, hitBool, enemyT, deathT, hitTexture, playerDirection, comboNumber);
+        spriteManager.updateEnemies(player, dt, hitBool, enemyT, deathT, hitTexture, attackT, playerDirection, comboNumber);
         player.move(0, velocity * dt);
         // enemyShape.move(0, enemyVelocity * dt);
         // enemyShape.setFillColor(sf::Color::Green);
