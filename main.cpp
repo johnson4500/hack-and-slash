@@ -8,6 +8,7 @@
 // flag to render entirety of attack animation
 bool isAttacking = false;
 bool hitBool = false;
+int gameState = 0;
 
 // Player direction boolean flag
 bool playerIsRight = true;
@@ -138,16 +139,20 @@ int main() {
     sf::Texture *attackT = TextureManager::loadTexture("enemy-attack", "C:/Users/johns/Downloads/attackpiskel.png");
 
     Enemy* enemy = new Enemy(enemyT, deathT, hitTexture, attackT);
-    Enemy* enemy2 = new Enemy(enemyT, deathT, hitTexture, attackT);
-    enemy2->enemySprite.setPosition(800, 400);
+    // Enemy* enemy2 = new Enemy(enemyT, deathT, hitTexture, attackT);
+    // enemy2->enemySprite.setPosition(800, 400);
 
     SpriteManager spriteManager;
     spriteManager.addEnemy(enemy);
-    spriteManager.addEnemy(enemy2);
+    // spriteManager.addEnemy(enemy2);
 
     // Floor
     sf::RectangleShape floor(sf::Vector2f(1280, 100));
     floor.setPosition(0, 455);
+
+    sf::RectangleShape button(sf::Vector2f (400, 400));
+    button.setFillColor(sf::Color::White);
+    button.setPosition(0,500);
 
     int groundHeight = 400;
     float velocity = 0;
@@ -159,108 +164,124 @@ int main() {
 
     while (window.isOpen())
     {
-        hitBool = false;
-        sf::Event event;
-        float dt  = clock.restart().asSeconds();
-        float fps = 1.f / dt;
-        
-        text.setString(std::to_string(fps));
 
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-
-            // Player jump
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::W && player.getPosition().y == groundHeight) {
-                velocity = -jumpSpeed;
-            }
-
-            if  (isAttacking == false && dodgeClock.getElapsedTime().asSeconds() >= 0.3f && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::E) {
-                attackSpriteSource.left = 0;
-                player.setTexture(dodge);
-                dodging = true;
-                dodgeClock.restart();
-            }
-
-            if (c5.getElapsedTime().asSeconds() >= 0.1f && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
-                if (isAttacking && comboNumber == 2 && finalHit.getElapsedTime().asSeconds() <= 0.3f) {
-                } else {
-                    isAttacking = true;
-                    hitBool = true;
-                    comboNumber++;
-                    if (comboNumber > 2) 
-                        comboNumber = 0;
-                    attackSpriteSource.left = 0;
-                    player.setTexture(attackList[comboNumber]);
+        if (gameState == 0) {
+            // Code for handling menu state goes here
+            sf::Event menuEvent;
+            while (window.pollEvent(menuEvent)) {
+                if (menuEvent.type == sf::Event::KeyPressed && menuEvent.key.code == sf::Keyboard::Enter) {
+                    gameState = 1;  // Switch to game state when Enter key is pressed
                 }
-                
-                finalHit.restart();
-                c5.restart();
-                comboreset.restart();
             }
+
+            window.draw(button);
+            window.display();
+            // Render menu elements here
         }
 
-        if (comboreset.getElapsedTime().asSeconds() > 0.4f) {
-            comboNumber = 2;
-        }
+        if (gameState == 1) {
+            hitBool = false;
+            sf::Event event;
+            float dt  = clock.restart().asSeconds();
+            float fps = 1.f / dt;
+            
+            text.setString(std::to_string(fps));
 
-        if (isAttacking || dodging) {
-            spriteAttack(elapsed3, c4, attackSpriteSource, player);
-            if (dodging && !isAttacking) player.move(playerDirection * 600 * dt, 0);
-            // Check if the animation is complete
-            if (attackSpriteSource.left >= player.getTexture()->getSize().x - 320 /* calculate the total width of your attack sprite sheet */) {
-                // Animation is complete, reset variables
-                attackSpriteSource.left = 0;
-                player.setTexture(playerTextureLeft);
-                player.setTextureRect(sourceSprite);
-                isAttacking = false;
-                dodging = false;
-            }
-        }
+            while (window.pollEvent(event)) {
+                if (event.type == sf::Event::Closed)
+                    window.close();
 
-        if (sf::Keyboard:: isKeyPressed(sf::Keyboard::A)) {
-            playerDirection = -1;
-            player.move(-playerSpeed * dt, 0);
-            playerIsRight = false;
-            player.setScale(1.0f, 1.0f);
-            if (!isAttacking && !dodging) {
-                animate(elapsed, c2, sourceSprite, player, playerTextureLeft);
-            }
-        } else if (sf::Keyboard:: isKeyPressed(sf::Keyboard::D)) {
-            playerDirection = 1;
-            player.move(playerSpeed * dt, 0);
-            playerIsRight = true;
-            player.setScale(-1.0f, 1.0f);
-            if (!isAttacking && !dodging) {
-                animate(elapsed, c2, sourceSprite, player, playerTextureLeft);
-            }
-        } else {
-            if (!isAttacking && !dodging && (sourceSprite.left / 320) % 4 != 3) {
-                playerIsRight ? player.setScale(-1.0f, 1.0f) : player.setScale(1.0f, 1.0f);
-                returnToDefaultSprite(elapsed2, c3, sourceSprite, player);
-            }
-        }
+                // Player jump
+                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::W && player.getPosition().y == groundHeight) {
+                    velocity = -jumpSpeed;
+                }
 
-        // Gravity logic for player and enemy
-        if (player.getPosition().y < groundHeight || velocity < 0) {
-            velocity += gravity * dt; 
-        } else {
-            player.setPosition(player.getPosition().x, groundHeight);
-            velocity = 0;
-        }
+                if  (isAttacking == false && dodgeClock.getElapsedTime().asSeconds() >= 0.3f && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::E) {
+                    attackSpriteSource.left = 0;
+                    player.setTexture(dodge);
+                    dodging = true;
+                    dodgeClock.restart();
+                }
 
-        spriteManager.updateEnemies(player, dt, hitBool, enemyT, deathT, hitTexture, attackT, playerDirection, comboNumber);
-        player.move(0, velocity * dt);
-        // enemyShape.move(0, enemyVelocity * dt);
-        // enemyShape.setFillColor(sf::Color::Green);
-        // enemy2.movement(player, dt);
-        window.clear(sf::Color{ 55, 55, 55, 255 });
-        window.draw(floor);
-        spriteManager.drawEnemies(window, player);
-        window.draw(player);
-        window.draw(text);
-        
-        window.display();
+                if (c5.getElapsedTime().asSeconds() >= 0.1f && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
+                    if (isAttacking && comboNumber == 2 && finalHit.getElapsedTime().asSeconds() <= 0.3f) {
+                    } else {
+                        isAttacking = true;
+                        hitBool = true;
+                        comboNumber++;
+                        if (comboNumber > 2) 
+                            comboNumber = 0;
+                        attackSpriteSource.left = 0;
+                        player.setTexture(attackList[comboNumber]);
+                    }
+                    
+                    finalHit.restart();
+                    c5.restart();
+                    comboreset.restart();
+                }
+            }
+
+            if (comboreset.getElapsedTime().asSeconds() > 0.4f) {
+                comboNumber = 2;
+            }
+
+            if (isAttacking || dodging) {
+                spriteAttack(elapsed3, c4, attackSpriteSource, player);
+                if (dodging && !isAttacking) player.move(playerDirection * 600 * dt, 0);
+                // Check if the animation is complete
+                if (attackSpriteSource.left >= player.getTexture()->getSize().x - 320 /* calculate the total width of your attack sprite sheet */) {
+                    // Animation is complete, reset variables
+                    attackSpriteSource.left = 0;
+                    player.setTexture(playerTextureLeft);
+                    player.setTextureRect(sourceSprite);
+                    isAttacking = false;
+                    dodging = false;
+                }
+            }
+
+            if (sf::Keyboard:: isKeyPressed(sf::Keyboard::A)) {
+                playerDirection = -1;
+                player.move(-playerSpeed * dt, 0);
+                playerIsRight = false;
+                player.setScale(1.0f, 1.0f);
+                if (!isAttacking && !dodging) {
+                    animate(elapsed, c2, sourceSprite, player, playerTextureLeft);
+                }
+            } else if (sf::Keyboard:: isKeyPressed(sf::Keyboard::D)) {
+                playerDirection = 1;
+                player.move(playerSpeed * dt, 0);
+                playerIsRight = true;
+                player.setScale(-1.0f, 1.0f);
+                if (!isAttacking && !dodging) {
+                    animate(elapsed, c2, sourceSprite, player, playerTextureLeft);
+                }
+            } else {
+                if (!isAttacking && !dodging && (sourceSprite.left / 320) % 4 != 3) {
+                    playerIsRight ? player.setScale(-1.0f, 1.0f) : player.setScale(1.0f, 1.0f);
+                    returnToDefaultSprite(elapsed2, c3, sourceSprite, player);
+                }
+            }
+
+            // Gravity logic for player and enemy
+            if (player.getPosition().y < groundHeight || velocity < 0) {
+                velocity += gravity * dt; 
+            } else {
+                player.setPosition(player.getPosition().x, groundHeight);
+                velocity = 0;
+            }
+
+            spriteManager.updateEnemies(player, dt, hitBool, enemyT, deathT, hitTexture, attackT, playerDirection, comboNumber);
+            player.move(0, velocity * dt);
+            // enemyShape.move(0, enemyVelocity * dt);
+            // enemyShape.setFillColor(sf::Color::Green);
+            // enemy2.movement(player, dt);
+            window.clear(sf::Color{ 55, 55, 55, 255 });
+            window.draw(floor);
+            spriteManager.drawEnemies(window, player);
+            window.draw(player);
+            window.draw(text);
+            window.display();    
+        }
     }
 
     return 0;

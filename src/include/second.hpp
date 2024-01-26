@@ -19,6 +19,8 @@ struct Enemy {
     sf::Time elapsed3;
     sf::Clock c4;
     sf::Time elapsed4;
+    sf::Clock c5;
+    sf::Time elapsed5;
 
     sf::Texture *enemyTexture;
     sf::IntRect sourceRect;
@@ -38,6 +40,7 @@ struct Enemy {
     bool inRange;
     bool deathAnimation;
     bool isDead;
+    bool isAttacking;
     
     bool markedForRemoval;
 
@@ -59,10 +62,12 @@ struct Enemy {
         this->elapsed2 = c2.getElapsedTime();
         this->elapsed3 = c3.getElapsedTime();
         this->elapsed4 = c4.getElapsedTime();
+        this->elapsed5 = c5.getElapsedTime();
         this->inRange = false;
         this->markedForRemoval = false;
-        this-> health = 100;
-        this-> isHit = 100;
+        this->health = 100;
+        this->isHit = 100;
+        this->isAttacking = false;
     };
 
     Enemy(sf::Texture enemyTexture, sf::Sprite enemySprite, sf::Vector2f enemyPosition, bool deathAnimation, bool isDead) {
@@ -129,11 +134,12 @@ struct Enemy {
 
     void attack(sf::Time &elapsed, sf::Clock &clock, sf::Sprite &enemySprite, sf::IntRect &attackSourceRect) {
         elapsed = clock.getElapsedTime();
-        if (elapsed.asSeconds() >= 0.03f) {
-            if (attackSourceRect.left >= 3520) {
+        if (elapsed.asSeconds() >= 0.03f && isAttacking) {
+            if (attackSourceRect.left >= enemySprite.getTexture()->getSize().x - 320) {
                 attackSourceRect.left = 0;
-                enemySprite.setTexture(*enemyTexture);
+                isAttacking = false;
             } else {
+                enemySprite.setTexture(*attackTexture);
                 enemySprite.setTextureRect(attackSourceRect);
                 attackSourceRect.left += 320;
             }
@@ -156,6 +162,9 @@ struct Enemy {
                 enemySprite.move(direction * 200 * dt, 0);
                 enemySprite.setTexture(*enemyTexture);
                 movementAnimate(elapsed, c1, sourceRect, enemySprite, *enemyTexture);
+                attackSourceRect.left = 0;
+                isAttacking = false;
+                c5.restart();
             } else if (enemySprite.getPosition().x < player.getPosition().x - 150) {
                 direction = 1;
                 inRange = false;
@@ -163,22 +172,40 @@ struct Enemy {
                 enemySprite.move(direction * 200 * dt, 0);
                 enemySprite.setTexture(*enemyTexture);
                 movementAnimate(elapsed, c1, sourceRect, enemySprite, *enemyTexture);
+                attackSourceRect.left = 0;
+                isAttacking = false;
+                c5.restart();
             } else if ((sourceRect.left / 320) % 4 != 3) {
                 inRange = true;
                 returnToDefaultSprite(elapsed2, c2, sourceRect, enemySprite);
+                attackSourceRect.left = 0;
+                isAttacking = false;
+                c5.restart();
             }
 
             if (enemySprite.getPosition().x < player.getPosition().x + 150 && enemySprite.getPosition().x >= player.getPosition().x) {
                 direction = 1;
                 inRange = true;
-                enemySprite.setTexture(*attackTexture);
-                attack(elapsed, c4, enemySprite, attackSourceRect);
+                if (c5.getElapsedTime().asSeconds() >= 0.75f) {
+                    isAttacking = true;
+                    c5.restart();
+                }
+                if (!playerAttack) {
+                    attack(elapsed, c4, enemySprite, attackSourceRect);   
+                }
             } else if (enemySprite.getPosition().x > player.getPosition().x - 150 && enemySprite.getPosition().x <= player.getPosition().x) {
                 direction = -1;
                 inRange = true;
-                enemySprite.setTexture(*attackTexture);
-                attack(elapsed, c4, enemySprite, attackSourceRect);
+                if (c5.getElapsedTime().asSeconds() >= 0.75f) {
+                    isAttacking = true;
+                    c5.restart();
+                }
+                if (!playerAttack) {
+                    attack(elapsed, c4, enemySprite, attackSourceRect);   
+                }
             }
+
+            // std::cout << isAttacking;
         }
 
         if (playerAttack && inRange && playerDirection == direction) {
