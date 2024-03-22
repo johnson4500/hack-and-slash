@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <list>
-#include <second.hpp>
+#include <Enemy.hpp>
 #include <spriteManager.hpp>
 
 // flag to render entirety of attack animation
@@ -152,7 +152,7 @@ int main() {
 
     sf::RectangleShape button(sf::Vector2f (400, 400));
     button.setFillColor(sf::Color::White);
-    button.setPosition(0,500);
+    button.setPosition(500, 100);
 
     int groundHeight = 400;
     float velocity = 0;

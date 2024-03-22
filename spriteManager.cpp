@@ -1,7 +1,7 @@
 #include <spriteManager.hpp>
 #include <SFML/Graphics.hpp>
 #include <spriteManager.hpp>
-#include <second.hpp>
+#include <Enemy.hpp>
 #include <iostream>
 
 using namespace std;
@@ -26,7 +26,7 @@ void SpriteManager::removeEnemies() {
 }
 
 void SpriteManager::updateEnemies(sf::Sprite &player, float dt, bool isAttacking, sf::Texture *enemyT, sf::Texture *deathT, sf::Texture *hitT, sf::Texture *attackT, int playerDirection, int comboNumber) {
-    if (enemies.size() < 2) {
+    if (enemies.size() < 1) {
             Enemy *enemy = new Enemy(enemyT, deathT, hitT, attackT);
             addEnemy(enemy);
     }
