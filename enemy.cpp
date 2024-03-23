@@ -20,7 +20,7 @@ Enemy::Enemy(sf::Texture *texture1, sf::Texture *texture2, sf::Texture *texture3
     this->helloo = sf::IntRect(0, 0, 320, 320);
     this->enemySprite = sf::Sprite(*enemyTexture, sourceRect);
     this->enemySprite.setOrigin(160, 160);
-    this->enemySprite.setPosition(sf::Vector2f(getRandomNumber(0, 1000), 400));
+    this->enemySprite.setPosition(sf::Vector2f(getRandomNumber(3000, 3500), 500));
     this->deathAnimation = false;
     this->isDead = false;
     this->elapsed = c1.getElapsedTime();
@@ -147,7 +147,7 @@ void Enemy::movement(sf::Sprite &player, float dt, bool playerAttack, int player
             c5.restart();
         }
 
-        if (enemySprite.getPosition().x < player.getPosition().x + 150 && enemySprite.getPosition().x >= player.getPosition().x) {
+        if (enemySprite.getPosition().x < player.getPosition().x + 600 && enemySprite.getPosition().x >= player.getPosition().x) {
             direction = 1;
             inRange = true;
             if (c5.getElapsedTime().asSeconds() >= 0.55f) {
@@ -168,8 +168,6 @@ void Enemy::movement(sf::Sprite &player, float dt, bool playerAttack, int player
                 attack(elapsed, c4, enemySprite, attackSourceRect);   
             }
         }
-
-        // std::cout << isAttacking;
     }
 
     if (playerAttack && inRange && playerDirection == direction) {

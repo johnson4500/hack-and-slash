@@ -2,13 +2,16 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <cmath>
 #include <Enemy.hpp>
 #include <spriteManager.hpp>
 
 // flag to render entirety of attack animation
 bool isAttacking = false;
 bool hitBool = false;
-int gameState = 0;
+bool playerShoot = false;
+int gameState = 1;
+bool moveCameraFlag = false;
 
 // Player direction boolean flag
 bool playerIsRight = true;
@@ -54,13 +57,47 @@ void spriteAttack(sf::Time &elapsed3, sf::Clock &c4, sf::IntRect &attackSourceSp
     }
 }
 
+void gunAnimate(sf::Time &gunClockElapsed, sf::Clock &gunClock, sf::IntRect &gunRect, sf::Sprite &armSprite, sf::View &Camera) {
+    gunClockElapsed = gunClock.getElapsedTime();
+    if (gunClockElapsed.asSeconds() >= 0.04f) {
+        if (gunRect.left >= 630) {
+            gunRect.left = 0;
+            playerShoot = false;
+            Camera.move(-2, -6);
+        } else {
+            gunRect.left += 320;
+            Camera.move(1, 3);
+        }
+        
+        armSprite.setTextureRect(gunRect);
+        gunClock.restart();  
+    }
+}
+
+
+void moveCamera(sf::Time &cameraElapsed, sf::Clock &cameraClock, sf::View &Camera, bool &moveCameraFlag, sf::Sprite skySprite) {
+    cameraElapsed = cameraClock.getElapsedTime();
+    if (cameraElapsed.asSeconds() >= 0.005f) {
+        if (moveCameraFlag) {
+            Camera.move(10, 0);
+            skySprite.move(10, 0);
+
+            if ((static_cast<int>(Camera.getCenter().x) - 640) % 960 == 0) {
+                moveCameraFlag = false;
+            }
+        }
+        cameraClock.restart();
+    }
+}
+
 int main() {
     sf::RenderWindow window(sf::VideoMode(1280, 720), "SFML works!");
     window.setKeyRepeatEnabled(false);
     // window.setFramerateLimit(144);
-    // sf::View Camera;
-    // Camera.setSize(1280, 720);
-    // Camera.setCenter(640, 320);
+    sf::View Camera;
+    // float CameraX = 640;
+    Camera.setSize(1280, 720);
+    Camera.setCenter(640, 320);
 
     // Some temporary clocks while I create a movement class
     sf::Clock clock;
@@ -76,6 +113,12 @@ int main() {
     sf::Clock c5;
     sf::Time elapsed4 = c5.getElapsedTime();
 
+    sf::Clock cameraClock;
+    sf::Time cameraElapsed = cameraClock.getElapsedTime();
+
+    sf::Clock gunClock;
+    sf::Time gunClockElapse = gunClock.getElapsedTime();
+
     sf::Clock comboreset;
     sf::Time elapse5 = comboreset.getElapsedTime();
 
@@ -90,6 +133,17 @@ int main() {
     text.setFillColor(sf::Color::White);
     text.setPosition(10,10);
 
+    // Sky texture
+    sf::Texture skyTexture;
+    sf::Sprite skySprite;
+    float skyPos = -100;
+    skyTexture.setRepeated(true);
+    skyTexture.loadFromFile("C:/Users/johns/Downloads/gamesky.jpg");
+    skySprite.setTextureRect(sf::IntRect(0, 0, 120000, 2000));
+    skySprite.setTexture(skyTexture);
+    skySprite.setPosition(skyPos, -100);
+    skySprite.setScale(0.5, 0.7);
+
     // Enemy sprite
     sf::Sprite enemySprite;
     sf::Texture spriteTexture;
@@ -100,11 +154,14 @@ int main() {
 
     // Player sprite
     sf::Texture playerTextureLeft;
-    playerTextureLeft.loadFromFile("C:/Users/johns/Downloads/playerpiskleft.png");
+    playerTextureLeft.loadFromFile("C:/Users/johns/Downloads/playerpiskeleftnew.png");
     sf::IntRect sourceSprite(0, 0, 320, 320);
     sf::Sprite player(playerTextureLeft, sourceSprite);
     player.setPosition(400, 400);
     player.setOrigin(160, 160);
+
+    // Player direction marker
+    sf::RectangleShape playerArm(sf::Vector2f(120, 10));
 
     // Player attack sprite
     sf::Texture attackTextureLeft;
@@ -147,14 +204,39 @@ int main() {
     // spriteManager.addEnemy(enemy2);
 
     // Floor
-    sf::RectangleShape floor(sf::Vector2f(1280, 100));
-    floor.setPosition(0, 455);
+    sf::Sprite floor;
+    sf::Texture grassTexture;
+    grassTexture.loadFromFile("C:/Users/johns/Downloads/grass.jpg");
+    grassTexture.setSmooth(true);
+    grassTexture.setRepeated(true);
+    floor.setTextureRect(sf::IntRect(0, 0, 5120, 555));
+    floor.setPosition(0, 555);
+    // floor.setScale(1, 0.5);
+    floor.setTexture(grassTexture);
+
+    // sf::Sprite floor2;
+    // floor2.setPosition(1280, 555);
+    // floor2.setScale(1, 1);
+    // floor2.setTexture(grassTexture);
 
     sf::RectangleShape button(sf::Vector2f (400, 400));
     button.setFillColor(sf::Color::White);
     button.setPosition(500, 100);
 
-    int groundHeight = 400;
+
+    // Temp bullet 
+    sf::RectangleShape bullet(sf::Vector2f (10, 10));
+    bullet.setPosition(400, 500);
+
+    // Arm gun texture
+    sf::Texture armTexture;
+    sf::IntRect gunRect(0, 0, 250, 53);
+    
+    armTexture.loadFromFile("C:/Users/johns/Downloads/armgunpisk1.png");
+    sf::Sprite armSprite(armTexture, gunRect);
+    // armSprite.setScale(-1.0f, 1.0f);
+
+    int groundHeight = 500;
     float velocity = 0;
     float enemyVelocity = 0;
     float gravity = 3500;
@@ -176,7 +258,6 @@ int main() {
 
             window.draw(button);
             window.display();
-            // Render menu elements here
         }
 
         if (gameState == 1) {
@@ -184,12 +265,33 @@ int main() {
             sf::Event event;
             float dt  = clock.restart().asSeconds();
             float fps = 1.f / dt;
-            
+
+            // Calculate angle between mouse and player
+            sf::Vector2i position = sf::Mouse::getPosition(window);
+            float opp = position.y - armSprite.getPosition().y - 70;
+            float adj = (position.x + (armSprite.getPosition().x - 400)) - armSprite.getPosition().x;
+            float hyp = sqrt(pow(adj, 2) + pow(opp, 2));
+            float angle = asin(opp / hyp);
+            playerArm.setRotation(angle * (180 / M_PI));
+            armSprite.setRotation(angle* (180 / M_PI));
+            if (position.x < 400) {
+                playerDirection = -1; 
+                player.setScale(1.0f, 1.0f);
+            } else {
+                playerDirection = 1;
+                    player.setScale(-1.0f, 1.0f);
+            }
+        
             text.setString(std::to_string(fps));
 
             while (window.pollEvent(event)) {
-                if (event.type == sf::Event::Closed)
-                    window.close();
+                if (event.type == sf::Event::Closed) window.close();
+
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                    playerShoot = true;
+                    bullet.setFillColor((sf::Color::Black));
+                    bullet.setPosition(playerArm.getPosition().x, playerArm.getPosition().y - 32);
+                }
 
                 // Player jump
                 if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::W && player.getPosition().y == groundHeight) {
@@ -221,6 +323,8 @@ int main() {
                 }
             }
 
+        
+            // Handle animation below
             if (comboreset.getElapsedTime().asSeconds() > 0.4f) {
                 comboNumber = 2;
             }
@@ -240,6 +344,9 @@ int main() {
             }
 
             if (sf::Keyboard:: isKeyPressed(sf::Keyboard::A)) {
+                Camera.move(-playerSpeed * dt, 0);
+                skySprite.move(20 * dt, 0);
+                floor.move(200 * dt, 0);
                 playerDirection = -1;
                 player.move(-playerSpeed * dt, 0);
                 playerIsRight = false;
@@ -248,6 +355,9 @@ int main() {
                     animate(elapsed, c2, sourceSprite, player, playerTextureLeft);
                 }
             } else if (sf::Keyboard:: isKeyPressed(sf::Keyboard::D)) {
+                Camera.move(playerSpeed * dt, 0);
+                skySprite.move(-20 * dt, 0);
+                floor.move(-200 * dt, 0);
                 playerDirection = 1;
                 player.move(playerSpeed * dt, 0);
                 playerIsRight = true;
@@ -269,6 +379,29 @@ int main() {
                 player.setPosition(player.getPosition().x, groundHeight);
                 velocity = 0;
             }
+            
+            playerArm.setPosition(player.getPosition());
+            armSprite.setPosition(player.getPosition().x - 30, player.getPosition().y - 45);
+            
+            if (playerShoot) {
+                gunAnimate(gunClockElapse, gunClock, gunRect, armSprite, Camera);
+            }
+
+            bullet.move(0.5 * cos(angle), 0.5 * sin(angle));
+
+            if (bullet.getPosition().x < enemy->enemySprite.getPosition().x + 1 && bullet.getPosition().x > enemy->enemySprite.getPosition().x - 1) {
+                hitBool = true;
+                bullet.setFillColor((sf::Color(255,255,255,0)));
+            } else {
+                hitBool = false;
+            }
+            
+
+            // if (static_cast<int>(player.getPosition().x) % (static_cast<int>(Camera.getCenter().x) + 540) == 0) {
+            //     moveCameraFlag = true;
+            // }
+
+            // moveCamera(cameraElapsed, cameraClock, Camera, moveCameraFlag, skySprite);
 
             spriteManager.updateEnemies(player, dt, hitBool, enemyT, deathT, hitTexture, attackT, playerDirection, comboNumber);
             player.move(0, velocity * dt);
@@ -276,9 +409,15 @@ int main() {
             // enemyShape.setFillColor(sf::Color::Green);
             // enemy2.movement(player, dt);
             window.clear(sf::Color{ 55, 55, 55, 255 });
+            window.setView(Camera);
+            window.draw(skySprite);
             window.draw(floor);
             spriteManager.drawEnemies(window, player);
+            // window.draw(playerArm);
             window.draw(player);
+            window.draw(bullet);
+            window.draw(armSprite);
+            
             window.draw(text);
             window.display();    
         }
