@@ -86,7 +86,7 @@ void Enemy::hitAnimate(sf::Time&elapsed, sf::Clock &clock, sf::Sprite &enemySpri
     if (elapsed.asSeconds() >= 0.08f) {
         // std::cout << isHit;
         if (isHit < 2) {
-                enemySprite.setColor(sf::Color::Black);
+                enemySprite.setColor(sf::Color::White);
         } else {
             enemySprite.setColor(sf::Color::White);
             enemySprite.setTexture(*enemyTexture);
