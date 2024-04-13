@@ -8,9 +8,9 @@ struct Player {
         
     public:
         Animation *animator;
-        sf::Sprite player;
-        sf::Texture playerTexture;
-        sf::IntRect sourceSprite;
+        sf::Sprite playerSprite;
+        sf::Texture *playerTexture;
+        sf::IntRect sourceSprite = sf::IntRect(0, 0, 320, 320);
         sf::Texture idle;
         sf::Texture walking;
         float playerSpeed;
@@ -26,12 +26,12 @@ struct Player {
 
         Player();
 
-        Player(sf::Texture &playerTexture, sf::IntRect &sourceSprite, sf::Vector2f playerPosition);
+        Player(sf::Vector2f playerPosition);
 
         void playerMove(float dt);
 
         void animate();
 
-        void changeAnimation(sf::Texture &newTexture, sf::IntRect &newTextureRect);
+        void changeAnimation(sf::Texture *newTexture, sf::IntRect &newTextureRect);
     
 };
