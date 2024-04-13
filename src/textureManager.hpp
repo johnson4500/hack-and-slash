@@ -12,8 +12,8 @@ using namespace std;
 destroyed once the constructor finishes. This is why we need a resource manager that is
 always in scope of the Enemy struct.*/
 class TextureManager {
-    static map<string, sf::Texture*> textureMap;
     public:
+        static map<string, sf::Texture*> textureMap;
         static sf::Texture* loadTexture(string name, string path);
 
     TextureManager();
