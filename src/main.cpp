@@ -19,7 +19,7 @@ int main() {
     Camera.setSize(1280, 720);
     Camera.setCenter(640, 320);
 
-    // Some temporary clocks while I create a movement class
+    // delta time clock
     sf::Clock clock;
 
     sf::Font font;
@@ -41,7 +41,7 @@ int main() {
     // NEW CLASS INSTANTIATIONS
     sf::IntRect playerSourceSprite(0, 0, 320, 320);
     sf::IntRect runRect(0, 0, 320, 320);
-    Player* johnson = new Player(sf::Vector2f(200, 200));
+    Player* johnson = new Player(sf::Vector2f(300, 200));
     LevelOne level = LevelOne();
 
     // Enemy death animation
@@ -65,6 +65,10 @@ int main() {
     sf::RectangleShape button(sf::Vector2f (400, 400));
     button.setFillColor(sf::Color::White);
     button.setPosition(500, 100);
+
+    sf::IntRect floorRect(0, 0, 2000, 720);
+    level.skySprites[6].setTextureRect(floorRect);
+    level.skyTextures[6]->setRepeated(true);
     
 
     int groundHeight = 475;
@@ -116,15 +120,20 @@ int main() {
                 Camera.move(-johnson->playerSpeed * dt, 0);
                 level.move(dt);
                 johnson->playerDirection = -1;
+                playerSourceSprite.left = 0;
                 johnson->changeAnimation(TextureManager::textureMap["playerrun"], runRect);
                 johnson->playerMove(dt);
             } else if (sf::Keyboard:: isKeyPressed(sf::Keyboard::D)) {
                 Camera.move(johnson->playerSpeed * dt, 0);
                 level.move(-dt);
                 johnson->playerDirection = 1;
+                playerSourceSprite.left = 0;
                 johnson->changeAnimation(TextureManager::textureMap["playerrun"], runRect);
                 johnson->playerMove(dt);
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::E) && johnson->doorInteract == true) {
+                level.playTransition = true;
             } else {
+                runRect.left = 0;
                 johnson->changeAnimation(TextureManager::textureMap["playeridle"], playerSourceSprite);
             }
 
@@ -137,6 +146,8 @@ int main() {
                 velocity = 0;
             }
 
+            // std::cout << johnson->playerSprite.getPosition().x << std::endl;
+
             // spriteManager.updateEnemies(player, dt, hitBool, enemyT, deathT, hitTexture, attackT, playerDirection, comboNumber);
             johnson->playerSprite.move(0, velocity * dt);
             // enemyShape.move(0, enemyVelocity * dt);
@@ -147,6 +158,7 @@ int main() {
             // spriteManager.drawEnemies(window, player);
             level.render(window);
             window.draw(johnson->playerSprite);
+            level.update(johnson, window);  
             // window.draw(text);
             window.display();    
         }
