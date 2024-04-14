@@ -1,3 +1,5 @@
+#ifndef PLAYER_HPP
+#define PLAYER_HPP
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <string>
@@ -14,6 +16,7 @@ struct Player {
         sf::Texture idle;
         sf::Texture walking;
         float playerSpeed;
+        bool doorInteract = false;
         int playerDirection;
         bool isAttacking = false;   
         bool hitBool = false;
@@ -35,3 +38,5 @@ struct Player {
         void changeAnimation(sf::Texture *newTexture, sf::IntRect &newTextureRect);
     
 };
+
+#endif
