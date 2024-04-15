@@ -69,7 +69,14 @@ int main() {
     sf::IntRect floorRect(0, 0, 2000, 720);
     level.skySprites[6].setTextureRect(floorRect);
     level.skyTextures[6]->setRepeated(true);
-    
+
+    sf::Texture spotLightText;
+    spotLightText.loadFromFile("assets/spotlight.png");
+    sf::Sprite spotLight;
+    spotLight.setTexture(spotLightText);
+    spotLight.setColor(sf::Color(0, 0, 0, 240));
+    spotLight.setPosition(0, -50);
+    spotLight.setOrigin(0, 0);
 
     int groundHeight = 475;
     float velocity = 0;
@@ -105,8 +112,12 @@ int main() {
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed) window.close();
 
-                if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                // if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 
+                // }
+
+                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F) {
+                    johnson->spotLightOn = !(johnson->spotLightOn);
                 }
 
                 // Player jump
@@ -118,6 +129,7 @@ int main() {
 
             if (sf::Keyboard:: isKeyPressed(sf::Keyboard::A)) {
                 Camera.move(-johnson->playerSpeed * dt, 0);
+                spotLight.move(-johnson->playerSpeed * dt, 0);
                 level.move(dt);
                 johnson->playerDirection = -1;
                 playerSourceSprite.left = 0;
@@ -125,16 +137,19 @@ int main() {
                 johnson->playerMove(dt);
             } else if (sf::Keyboard:: isKeyPressed(sf::Keyboard::D)) {
                 Camera.move(johnson->playerSpeed * dt, 0);
+                spotLight.move(johnson->playerSpeed * dt, 0);
                 level.move(-dt);
                 johnson->playerDirection = 1;
                 playerSourceSprite.left = 0;
                 johnson->changeAnimation(TextureManager::textureMap["playerrun"], runRect);
                 johnson->playerMove(dt);
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::E) && johnson->doorInteract == true) {
-                level.playTransition = true;
             } else {
                 runRect.left = 0;
                 johnson->changeAnimation(TextureManager::textureMap["playeridle"], playerSourceSprite);
+            }
+            
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::E) && johnson->doorInteract == true) {
+                level.playTransition = true;
             }
 
             johnson->animator->play();
@@ -146,7 +161,7 @@ int main() {
                 velocity = 0;
             }
 
-            // std::cout << johnson->playerSprite.getPosition().x << std::endl;
+            // std::cout << sizeof(&outerRing) << std::endl;
 
             // spriteManager.updateEnemies(player, dt, hitBool, enemyT, deathT, hitTexture, attackT, playerDirection, comboNumber);
             johnson->playerSprite.move(0, velocity * dt);
@@ -158,7 +173,8 @@ int main() {
             // spriteManager.drawEnemies(window, player);
             level.render(window);
             window.draw(johnson->playerSprite);
-            level.update(johnson, window);  
+            level.update(johnson, window);
+            johnson->update(window, event);  
             // window.draw(text);
             window.display();    
         }
