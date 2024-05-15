@@ -9,8 +9,9 @@ compile:
 	g++ -Isrc -Isrc/include -c src/player.cpp 
 	g++ -Isrc -Isrc/include -c src/animation.cpp 
 	g++ -Isrc -Isrc/include -c src/levelone.cpp 
+	g++ -Isrc -Isrc/include -c src/dialogbox.cpp 
 
 	
 
 link: 
-	g++ main.o textureManager.o spriteManager.o enemy.o player.o animation.o levelone.o -o main -Lsrc/lib -lsfml-graphics -lsfml-window -lsfml-system
+	g++ main.o textureManager.o spriteManager.o enemy.o player.o animation.o levelone.o dialogbox.o -o main -Lsrc/lib -lsfml-graphics -lsfml-window -lsfml-system
