@@ -23,13 +23,28 @@ LevelOne::LevelOne() {
     transitionRect.setFillColor(sf::Color::Black);
     transitionRect.setSize(sf::Vector2f(1600, 900));
     transitionRect.setFillColor(sf::Color(0, 0, 0, alphavalue));
+
+    roomOneText = TextureManager::loadTexture("level1room1", "assets/levelone/level1room1.png");
+    roomOneSprite.setTexture(*roomOneText);
+    roomOneSprite.setScale(1.75, 1.75);
+    roomOneSprite.setPosition(0, -475);
+
+    crawlerText = TextureManager::loadTexture("crawlertexture", "assets/levelone/crawlerevent.png");
+    crawlerSprite.setTextureRect(crawlerRect);
+    crawlerSprite.setTexture(*crawlerText);
+    crawlerSprite.setScale(0.5f, 0.5f);
+    crawlerSprite.setPosition(400, 355);
+    crawlerSprite.setColor(sf::Color(0, 0, 0, 0));
+    // crawlerSprite.setPosition();
+
 };
 
 void LevelOne::update(Player *player, sf::RenderWindow &window) {
     if (player->playerSprite.getPosition().x >= 1162 && player->playerSprite.getPosition().x <= 1240) {
         player->doorInteract = true;
         doorText.setPosition(player->playerSprite.getPosition().x + 30, player->playerSprite.getPosition().y - 50); 
-        window.draw(doorText);
+        // window.draw(doorText);
+        
 
         if (playTransition) {
             transition(window);
@@ -45,7 +60,7 @@ void LevelOne::transition(sf::RenderWindow &window) {
     if (fadeClockElapsed.asSeconds() >= 0.005) {
         if (alphavalue < 255) {
             transitionRect.setFillColor(sf::Color(0, 0, 0, alphavalue));
-            alphavalue+= 5;
+            alphavalue += 10;
         }
         fadeClock.restart();
     }
@@ -55,8 +70,10 @@ void LevelOne::transition(sf::RenderWindow &window) {
 
 
 void LevelOne::render(sf::RenderWindow &window) {
+    window.draw(roomOneSprite);
+    window.draw(crawlerSprite);
     for (int i = 0; i < 7; i++) {
-        window.draw(skySprites[i]);
+        // window.draw(skySprites[i]);
     }
 };
 
@@ -65,3 +82,22 @@ void LevelOne::move(float dt) {
         skySprites[i].move(skyParallaxValues[i] * dt, 0);
     }
 };
+
+void LevelOne::playEventOne() {
+    crawlerSprite.setColor(sf::Color::White);
+    eventOneElapsed = eventOneClock.getElapsedTime();
+    if (eventOneElapsed.asSeconds() >= 0.08f) {
+        if (crawlerRect.left >= crawlerText->getSize().x - 320) {
+            crawlerRect.left = 0;
+        } else {
+            crawlerRect.left += 320;
+        }
+
+        if (crawlerRect.left >= 2240) {
+            crawlerSprite.move(crawlerSpeed, 0);
+        }
+
+        crawlerSprite.setTextureRect(crawlerRect);
+        eventOneClock.restart();
+    }
+}
