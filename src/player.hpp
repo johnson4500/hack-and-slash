@@ -13,7 +13,7 @@ struct Player {
     sf::Texture idle;
     sf::Texture walking;
     
-    sf::CircleShape spotLight[3];
+    sf::CircleShape spotLight[4];
     bool spotLightOn = false;
     float playerSpeed;
     bool doorInteract = false;
