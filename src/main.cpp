@@ -8,20 +8,22 @@
 #include <player.hpp>
 #include <animation.hpp>
 #include <levelone.hpp>
+#include <dialogbox.hpp>
 
 int gameState = 1;
+int groundHeight = 410;
+float gravity = 3500;
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(1280, 720), "SFML works!");
+    sf::RenderWindow window(sf::VideoMode(1280, 720), "we're cookin");
     window.setKeyRepeatEnabled(false);
-    // window.setFramerateLimit(144);
+    window.setFramerateLimit(60);
     sf::View Camera;
     Camera.setSize(1280, 720);
     Camera.setCenter(640, 320);
 
     // delta time clock
     sf::Clock clock;
-
     sf::Font font;
     sf::Text text;
     font.loadFromFile("C:/Users/johns/Downloads/arial/arial.ttf");
@@ -30,37 +32,13 @@ int main() {
     text.setFillColor(sf::Color::White);
     text.setPosition(10,10);
 
-    // Enemy sprite
-    sf::Sprite enemySprite;
-    sf::Texture spriteTexture;
-    spriteTexture.loadFromFile("C:/Users/johns/Downloads/caefy.png");
-    enemySprite.setScale(0.2, 0.2);
-    enemySprite.setTexture(spriteTexture);
-    enemySprite.setPosition(800, 400);
-
-    // NEW CLASS INSTANTIATIONS
+    // Player object
+    Player* johnson = new Player(sf::Vector2f(300, 200));
     sf::IntRect playerSourceSprite(0, 0, 320, 320);
     sf::IntRect runRect(0, 0, 320, 320);
-    Player* johnson = new Player(sf::Vector2f(300, 200));
+    
+    // Level One Object
     LevelOne level = LevelOne();
-
-    // Enemy death animation
-    sf::Texture deathTexture;
-    deathTexture.loadFromFile("C:/Users/johns/Downloads/deathpiskel.png");
-    sf::IntRect deathSpriteSource(0, 0, 320, 320);
-
-    sf::Texture *hitTexture= TextureManager::loadTexture("enemy-hit", "C:/Users/johns/Downloads/hit.png");
-    sf::Texture *enemyT = TextureManager::loadTexture("enemy", "C:/Users/johns/Downloads/playerpiskleft.png");
-    sf::Texture *deathT = TextureManager::loadTexture("enemy-death", "C:/Users/johns/Downloads/deathpiskel.png");
-    sf::Texture *attackT = TextureManager::loadTexture("enemy-attack", "C:/Users/johns/Downloads/attackpiskel.png");
-
-    Enemy* enemy = new Enemy(enemyT, deathT, hitTexture, attackT);
-    // Enemy* enemy2 = new Enemy(enemyT, deathT, hitTexture, attackT);
-    // enemy2->enemySprite.setPosition(800, 400);
-
-    SpriteManager spriteManager;
-    spriteManager.addEnemy(enemy);
-    // spriteManager.addEnemy(enemy2);
 
     sf::RectangleShape button(sf::Vector2f (400, 400));
     button.setFillColor(sf::Color::White);
@@ -78,19 +56,14 @@ int main() {
     spotLight.setPosition(0, -50);
     spotLight.setOrigin(0, 0);
 
-    int groundHeight = 475;
-    float velocity = 0;
-    float enemyVelocity = 0;
-    float gravity = 3500;
-    float jumpSpeed = 1050;
+    DialogBox dialogBox = DialogBox();
 
-    int playerDirection = 1;
-
+    // Game loop
     while (window.isOpen())
     {
 
         if (gameState == 0) {
-            // Code for handling menu state goes here
+            // Handling menu state
             sf::Event menuEvent;
             while (window.pollEvent(menuEvent)) {
                 if (menuEvent.type == sf::Event::KeyPressed && menuEvent.key.code == sf::Keyboard::Enter) {
@@ -112,70 +85,75 @@ int main() {
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed) window.close();
 
-                // if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-
-                // }
-
+                // Toggle light
                 if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F) {
-                    johnson->spotLightOn = !(johnson->spotLightOn);
+                    johnson->setSpotLightBool(!(johnson->getSpotLightBool()));
                 }
 
                 // Player jump
-                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::W && johnson->playerSprite.getPosition().y == groundHeight) {
-                    velocity = -jumpSpeed;
+                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::W && johnson->getPlayerPosition().y == groundHeight) {
+                    johnson->setGravityVelocity(-johnson->getJumpSpeed());
                 }
 
+                // Progress through dialog box 
+                if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Enter) {
+                    dialogBox.iterate();
+                }
             }
 
             if (sf::Keyboard:: isKeyPressed(sf::Keyboard::A)) {
-                Camera.move(-johnson->playerSpeed * dt, 0);
-                spotLight.move(-johnson->playerSpeed * dt, 0);
+                if (johnson->getPlayerPosition().x < 755) {
+                    Camera.move(-johnson->getPlayerSpeed() * dt, 0);
+                    dialogBox.follow(-dt * johnson->getPlayerSpeed());
+                }
+
+                spotLight.move(-johnson->getPlayerSpeed() * dt, 0);
                 level.move(dt);
-                johnson->playerDirection = -1;
                 playerSourceSprite.left = 0;
                 johnson->changeAnimation(TextureManager::textureMap["playerrun"], runRect);
-                johnson->playerMove(dt);
+                johnson->move(dt, -1);
             } else if (sf::Keyboard:: isKeyPressed(sf::Keyboard::D)) {
-                Camera.move(johnson->playerSpeed * dt, 0);
-                spotLight.move(johnson->playerSpeed * dt, 0);
+                if (johnson->getPlayerPosition().x < 755) {
+                    Camera.move(johnson->getPlayerSpeed() * dt, 0);
+                    dialogBox.follow(dt * johnson->getPlayerSpeed());
+                }
+
+                spotLight.move(johnson->getPlayerSpeed() * dt, 0);
                 level.move(-dt);
-                johnson->playerDirection = 1;
                 playerSourceSprite.left = 0;
                 johnson->changeAnimation(TextureManager::textureMap["playerrun"], runRect);
-                johnson->playerMove(dt);
+                johnson->move(dt, 1);
             } else {
                 runRect.left = 0;
                 johnson->changeAnimation(TextureManager::textureMap["playeridle"], playerSourceSprite);
             }
             
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::E) && johnson->doorInteract == true) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::E) && johnson->getDoorInteract() == true) {
                 level.playTransition = true;
             }
 
-            johnson->animator->play();
+            johnson->getAnimator()->play();
+            johnson->handleGravity(dt, groundHeight);
 
-            if (johnson->playerSprite.getPosition().y < groundHeight || velocity < 0) {
-                velocity += gravity * dt; 
-            } else {
-                johnson->playerSprite.setPosition(johnson->playerSprite.getPosition().x, groundHeight);
-                velocity = 0;
-            }
-
-            // std::cout << sizeof(&outerRing) << std::endl;
-
-            // spriteManager.updateEnemies(player, dt, hitBool, enemyT, deathT, hitTexture, attackT, playerDirection, comboNumber);
-            johnson->playerSprite.move(0, velocity * dt);
-            // enemyShape.move(0, enemyVelocity * dt);
-            // enemyShape.setFillColor(sf::Color::Green);
-            // enemy2.movement(player, dt);
             window.clear(sf::Color{ 55, 55, 55, 255 });
             window.setView(Camera);
-            // spriteManager.drawEnemies(window, player);
             level.render(window);
-            window.draw(johnson->playerSprite);
+            window.draw(johnson->getPlayerSprite());
             level.update(johnson, window);
             johnson->update(window, event);  
-            // window.draw(text);
+
+            if (johnson->getPlayerPosition().x >= 1200) {
+                if (dialogBox.index == 3) {
+                    level.crawlerSpeed = 40;
+                }
+
+                level.playEventOne();
+                johnson->getPlayerSprite().setScale(-1.0f, 1.0f);
+                if (dialogBox.index < 4) {
+                    dialogBox.render(window);
+                }
+            }
+
             window.display();    
         }
     }
