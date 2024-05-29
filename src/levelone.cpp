@@ -40,9 +40,9 @@ LevelOne::LevelOne() {
 };
 
 void LevelOne::update(Player *player, sf::RenderWindow &window) {
-    if (player->playerSprite.getPosition().x >= 1162 && player->playerSprite.getPosition().x <= 1240) {
-        player->doorInteract = true;
-        doorText.setPosition(player->playerSprite.getPosition().x + 30, player->playerSprite.getPosition().y - 50); 
+    if (player->getPlayerPosition().x >= 1162 && player->getPlayerPosition().x <= 1240) {
+        player->setDoorInteract(true);
+        doorText.setPosition(player->getPlayerPosition().x + 30, player->getPlayerPosition().y - 50); 
         // window.draw(doorText);
         
 
@@ -50,7 +50,7 @@ void LevelOne::update(Player *player, sf::RenderWindow &window) {
             transition(window);
         }
     } else {
-        player->doorInteract = false;
+        player->setDoorInteract(false);
     }
 }
 
