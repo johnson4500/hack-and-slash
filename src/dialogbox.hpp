@@ -16,4 +16,6 @@ struct DialogBox {
     void iterate();
 
     void render(sf::RenderWindow &window);
+
+    void follow(float speed);
 };

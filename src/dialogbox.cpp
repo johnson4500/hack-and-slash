@@ -50,3 +50,9 @@ void DialogBox::render(sf::RenderWindow &window) {
     window.draw(boxText);
     window.draw(character);
 };
+
+void DialogBox::follow(float speed) {
+    dialogBoxSprite.move(speed, 0);
+    boxText.move(speed, 0);
+    character.move(speed, 0);
+};
