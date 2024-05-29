@@ -7,11 +7,16 @@
 #include <random>
 #include <spriteManager.hpp>
 #include <textureManager.hpp>
+#include <Entity.hpp>
 
 using namespace std;
 
-struct Enemy {
+struct Enemy : public Entity {
     public:
+        void update(sf::RenderWindow &window, sf::Event &event) override;
+        void move(float dt, int direction) override;
+        void changeAnimation(sf::Texture *newTexture, sf::IntRect &newTextureRect) override;
+        void handleGravity(float dt, int groundHeight) override;
         sf::Clock c1;
         sf::Time elapsed;
         sf::Clock c2;

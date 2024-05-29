@@ -201,3 +201,8 @@ void Enemy::movement(sf::Sprite &player, float dt, bool playerAttack, int player
         }
     } 
 };
+
+void Enemy::update(sf::RenderWindow &window, sf::Event &event) {};
+void Enemy::move(float dt, int direction) {};
+void Enemy::changeAnimation(sf::Texture *newTexture, sf::IntRect &newTextureRect) {};
+void Enemy::handleGravity(float dt, int groundHeight) {};
